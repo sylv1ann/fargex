@@ -1,6 +1,6 @@
 {-| 
 Module: Utilities
-Description: Utilities
+Description: Miscellaneous functions used in the program.
 -}
 
 module Utilities where
@@ -9,6 +9,12 @@ import Data.List
 import Data.Maybe (fromMaybe)
 import Data.Char (isAlphaNum)
 
+
+{-| replaceChar takes two lists of characters of equal length and a string and returns the same string with all occurrences of
+    characters in the first list replaced by the characters on the same position in the second list.
+    In case the second list is empty, then all characters from the first list are deleted from the given string.
+    Simulates command "tr" in bash.
+-}
 replaceChar :: (Eq a) => [a] -> [a] -> [a] -> [a]
 replaceChar _ _ [] = []
 replaceChar old [] (x:xs) = if elem x old then
@@ -30,8 +36,13 @@ replaceChar old new (x:xs)
 -- >>> replaceChar "()" ")(" $ reverse $ dotComplete "((ab+c)+a(bc)*+b)*"
 -- "*(b+*(c.b).a+(c+b.a))"
 --
--- toto mi správne otočí zadaný regex a doplní . tam kde by mal byť konkatenovaný -> takýto regex môžem hodiť do postfixu
 
+{-| Completes a string with '.' representing the concatenation based on the following rules: 
+    - at least two following alphanumeric characters: ab => a.b, ab0d => a.b.0.d
+    - two parentheses (with or without * operator between them): (a)(b)c => (a).(b).c, (aa)*(b) => (a.a)*.(b)
+    - an alphanumeric character followed by a left parentheses: a(b) => a.(b)
+    - star operator followed by an alphanumeric character: a*b => a*.b, 01*ab => 0.1*.a.b
+-}
 dotComplete :: String -> String
 dotComplete []    = []
 dotComplete [x] = [x]
@@ -44,10 +55,9 @@ dotComplete (x:y:xs)
 -- "((a.b+c)+a.(b.c)*+b)*"
 --
 
--- dalsie priklady
--- a(b)
--- a(b)c
--- a(b)c(d)
--- a*(b)
--- ['a'..'z']
--- "a(b)c(d)e(f)g(h)"
+-- Set of testing examples for dotComplete function:
+-- "a(b)" -> expected: a.(b)
+-- "a(b)c" -> expected: a.(b).c
+-- "a(b)c(d)" -> expected: a.(b).c.(d)
+-- "a*(b)" -> expected: a*.(b)
+-- "['a'..'z']" -> expected: a.b.c.d.e. ... .x.y.z
