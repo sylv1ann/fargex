@@ -16,12 +16,13 @@ type Alphabet = Char
 {-| The data constructor defines a FSM by the list of its transitions, list of initial
     states and list of final states.
     A transition/"delta function" is represented by a triplet which contains the initial 
-    state of the transition, the character of the alphabet being read on the input and the
-    list of final states.
+    state of the transition, the characters of the alphabet being read on the input (more
+    than one characters are needed for FSM -> RegEx transformation) and the list of final
+    states.
     Since this data type may represent also a non-deterministic finite machine, the initial
     state is represented by the set of states rather than a single state.
 -}
-data FA = FA [(State, Char, [State])] Start Final
+data FA = FA [(State, String, [State])] Start Final
     deriving Show
 
 -- | Gets the sorted set of all states of a FSM.

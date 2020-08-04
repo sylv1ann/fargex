@@ -116,7 +116,7 @@ convertRegexToFA regex = convert regex [] 0
 convert :: Regex -> [FA] -> Int -> FA
 convert [] res _ = head res
 convert (x:xs) res minN
-    | isAlphaNum x  =   let newFA = (FA [(minN,x,[succ minN])] [minN] [succ minN]) -- pridá do zoznamu nový jednoduchý automat (stavA, symbol abecedy) -> stavB, ktorý je aj konečným
+    | isAlphaNum x  =   let newFA = (FA [(minN,[x],[succ minN])] [minN] [succ minN]) -- pridá do zoznamu nový jednoduchý automat (stavA, symbol abecedy) -> stavB, ktorý je aj konečným
                         in convert xs (newFA:res) (succ $ succ minN)
 
     | x == '+'      =   if length res >= 2 then
@@ -146,14 +146,14 @@ plusRegex r@(FA r_trans r_initial r_final) s@(FA s_trans s_initial s_final) =
     where stateNumMax  = last $ (getStates r) ++ (getStates s)   -- last is the maximum -> state numbers are sorted ascending <-> interchangeable for "maximum"
           new_initial    = [stateNumMax + 1]                     -- new initial state set  
           new_final    = [stateNumMax + 2]
-          initial_lambda = [(head new_initial, '$', r_initial ++ s_initial)]
-          final_lambda = [(x,'$', new_final) | x <- r_final ++ s_final] 
+          initial_lambda = [(head new_initial, "$", r_initial ++ s_initial)]
+          final_lambda = [(x,"$", new_final) | x <- r_final ++ s_final] 
                 
 -- | Creates new FSM from two given FSMs by concatenating them.
 dotRegex :: FA -> FA -> FA
 dotRegex (FA r_trans r_initial r_final) (FA s_trans s_initial s_final) =
     FA (r_trans ++ lambda_R_S ++ s_trans) r_initial s_final
-    where lambda_R_S = [(x,'$', [y]) | x <- r_final, y <- s_initial]
+    where lambda_R_S = [(x,"$", [y]) | x <- r_final, y <- s_initial]
 
 -- | Creates new FSM from a given FSM by adding the iteration possibility.
 starRegex :: FA -> FA
@@ -162,8 +162,8 @@ starRegex fa@(FA trans initial final) =
     where stateNumMax    = last $ getStates fa
           new_initial    = [stateNumMax + 1]
           new_final      = [stateNumMax + 2]
-          initial_lambda = [(head new_initial, '$', initial ++ new_final)]
-          final_lambda   = [(x, '$', initial ++ new_final) | x <- final]   
+          initial_lambda = [(head new_initial, "$", initial ++ new_final)]
+          final_lambda   = [(x, "$", initial ++ new_final) | x <- final]   
 
 -- >>> dotRegex (FA [(0,'a',[1])] [0] [1]) (FA [(2,'b',[3])] [2] [3])
 -- FA [(0,'a',[1]),(1,'$',[2]),(2,'b',[3])] [0] [3]
