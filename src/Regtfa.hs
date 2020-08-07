@@ -28,8 +28,7 @@ toFinAuto = do
     regex  <- getLine
     putStrLn ("Your entered regex: " ++ regex)
     let postfixRegex = toPostfix $ dotComplete regex
-        result = convertRegexToFA $ postfixRegex
-    putStrLn ("Your regex in postfix notation: " ++ postfixRegex)
+        result = convertRegexToFSM $ postfixRegex
     putStrLn $ show result
     
 -- | Given a Regex in the form of a String, this is transformed to the prefix form.
@@ -98,26 +97,28 @@ stackChange ch c (s:ss) flag =
 
 
 -- stackChange "" "(" "" False
--- expected result: ("","")
+-- expected: ("","")
 
 -- "(01)*11(01)*(0+1)*00" -> "01.*1.1.01.*.01+*.0.0."
 -- "((ab+c)+a(bc)*+b)*"   -> "ab.c+abc.*.+b+*"
 -- "abba"                 -> "ab.b.a."
---'ϵ'
+-- "$"
 
 -- | Function wrapper responsible for the regex (already in postfix form) evaluation. 
-convertRegexToFA :: Regex -> FA
-convertRegexToFA regex = convert regex [] 0
+convertRegexToFSM :: Regex -> FSM
+convertRegexToFSM regex =   if regex /= "$" then 
+                                convert regex [] 0
+                            else FSM [] [] []
 
 
-{-| Regex -> FA converter. Takes a regex in postfix, list of intermediate results (FSMs)
+{-| Regex -> FSM converter. Takes a regex in postfix, list of intermediate results (FSMs)
      and the minimal number if any new state needs to be added.
  -}
-convert :: Regex -> [FA] -> Int -> FA
+convert :: Regex -> [FSM] -> Int -> FSM
 convert [] res _ = head res
 convert (x:xs) res minN
-    | isAlphaNum x  =   let newFA = (FA [(minN,[x],[succ minN])] [minN] [succ minN]) -- pridá do zoznamu nový jednoduchý automat (stavA, symbol abecedy) -> stavB, ktorý je aj konečným
-                        in convert xs (newFA:res) (succ $ succ minN)
+    | isAlphaNum x  =   let newFSM = (FSM [(minN,[x],[succ minN])] [minN] [succ minN]) -- pridá do zoznamu nový jednoduchý automat (stavA, symbol abecedy) -> stavB, ktorý je aj konečným
+                        in convert xs (newFSM:res) (succ $ succ minN)
 
     | x == '+'      =   if length res >= 2 then
                             let plusResult = plusRegex (res !! 1) (res !! 0)
@@ -140,9 +141,9 @@ convert (x:xs) res minN
     | otherwise     =   error "Unsupported regex error."
 
 -- | Creates new FSM from two given FSMs by adding new initial and final state and the possibility to continue to either of the original FSMs.
-plusRegex :: FA -> FA -> FA
-plusRegex r@(FA r_trans r_initial r_final) s@(FA s_trans s_initial s_final) =
-    FA (initial_lambda ++ r_trans ++ s_trans ++ final_lambda) (new_initial) (new_final)
+plusRegex :: FSM -> FSM -> FSM
+plusRegex r@(FSM r_trans r_initial r_final) s@(FSM s_trans s_initial s_final) =
+    FSM (initial_lambda ++ r_trans ++ s_trans ++ final_lambda) (new_initial) (new_final)
     where stateNumMax  = last $ (getStates r) ++ (getStates s)   -- last is the maximum -> state numbers are sorted ascending <-> interchangeable for "maximum"
           new_initial    = [stateNumMax + 1]                     -- new initial state set  
           new_final    = [stateNumMax + 2]
@@ -150,36 +151,36 @@ plusRegex r@(FA r_trans r_initial r_final) s@(FA s_trans s_initial s_final) =
           final_lambda = [(x,"$", new_final) | x <- r_final ++ s_final] 
                 
 -- | Creates new FSM from two given FSMs by concatenating them.
-dotRegex :: FA -> FA -> FA
-dotRegex (FA r_trans r_initial r_final) (FA s_trans s_initial s_final) =
-    FA (r_trans ++ lambda_R_S ++ s_trans) r_initial s_final
+dotRegex :: FSM -> FSM -> FSM
+dotRegex (FSM r_trans r_initial r_final) (FSM s_trans s_initial s_final) =
+    FSM (r_trans ++ lambda_R_S ++ s_trans) r_initial s_final
     where lambda_R_S = [(x,"$", [y]) | x <- r_final, y <- s_initial]
 
 -- | Creates new FSM from a given FSM by adding the iteration possibility.
-starRegex :: FA -> FA
-starRegex fa@(FA trans initial final) =
-    FA (initial_lambda ++ trans ++ final_lambda) new_initial new_final
+starRegex :: FSM -> FSM
+starRegex fa@(FSM trans initial final) =
+    FSM (initial_lambda ++ trans ++ final_lambda) new_initial new_final
     where stateNumMax    = last $ getStates fa
           new_initial    = [stateNumMax + 1]
           new_final      = [stateNumMax + 2]
           initial_lambda = [(head new_initial, "$", initial ++ new_final)]
           final_lambda   = [(x, "$", initial ++ new_final) | x <- final]   
 
--- >>> dotRegex (FA [(0,'a',[1])] [0] [1]) (FA [(2,'b',[3])] [2] [3])
--- FA [(0,'a',[1]),(1,'$',[2]),(2,'b',[3])] [0] [3]
+-- >>> dotRegex (FSM [(0,'a',[1])] [0] [1]) (FSM [(2,'b',[3])] [2] [3])
+-- FSM [(0,'a',[1]),(1,'$',[2]),(2,'b',[3])] [0] [3]
 --
 
--- >>> plusRegex (FA [(0,'a',[1])] [0] [1]) (FA [(2,'b',[3])] [2] [3])
--- FA [(4,'$',[0,2]),(0,'a',[1]),(2,'b',[3]),(1,'$',[5]),(3,'$',[5])] [4] [5]
+-- >>> plusRegex (FSM [(0,'a',[1])] [0] [1]) (FSM [(2,'b',[3])] [2] [3])
+-- FSM [(4,'$',[0,2]),(0,'a',[1]),(2,'b',[3]),(1,'$',[5]),(3,'$',[5])] [4] [5]
 --
 
--- >>> starRegex (FA [(0,'a',[1])] [0] [1])
--- FA [(2,'$',[0,3]),(0,'a',[1]),(1,'$',[0,3])] [2] [3]
+-- >>> starRegex (FSM [(0,'a',[1])] [0] [1])
+-- FSM [(2,'$',[0,3]),(0,'a',[1]),(1,'$',[0,3])] [2] [3]
 --
 
 -- >>> toFinAuto c+d* --> testuje aj správne poradie operácií pri vyhodnocovaní regexu
--- s parametrami pri + a . 0 1: FA [(2,'$',[4,0]),(4,'$',[2,5]),(2,'d',[3]),(3,'$',[2,5]),(0,'c',[1]),(5,'$',[3]),(1,'$',[3])] [2] [3] -- nesprávne
--- s parametrami pri + a . 1 0: FA [(6,'$',[0,4]),(0,'c',[1]),(4,'$',[2,5]),(2,'d',[3]),(3,'$',[2,5]),(1,'$',[7]),(5,'$',[7])] [6] [7] -- správne
+-- s parametrami pri + a . 0 1: FSM [(2,'$',[4,0]),(4,'$',[2,5]),(2,'d',[3]),(3,'$',[2,5]),(0,'c',[1]),(5,'$',[3]),(1,'$',[3])] [2] [3] -- nesprávne
+-- s parametrami pri + a . 1 0: FSM [(6,'$',[0,4]),(0,'c',[1]),(4,'$',[2,5]),(2,'d',[3]),(3,'$',[2,5]),(1,'$',[7]),(5,'$',[7])] [6] [7] -- správne
 
 -- >>> toFinAuto c+ba
--- FA [(6,'$',[0,2]),(0,'c',[1]),(2,'b',[3]),(3,'$',[4]),(4,'a',[5]),(1,'$',[7]),(5,'$',[7])] [6] [7] -- správne
+-- FSM [(6,'$',[0,2]),(0,'c',[1]),(2,'b',[3]),(3,'$',[4]),(4,'a',[5]),(1,'$',[7]),(5,'$',[7])] [6] [7] -- správne

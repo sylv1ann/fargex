@@ -55,7 +55,7 @@ dotComplete (x:y:xs)
 -- "((a.b+c)+a.(b.c)*+b)*"
 --
 
--- Set of testing examples for dotComplete function:
+-- Testing examples for dotComplete function:
 -- "a(b)" -> expected: a.(b)
 -- "a(b)c" -> expected: a.(b).c
 -- "a(b)c(d)" -> expected: a.(b).c.(d)
