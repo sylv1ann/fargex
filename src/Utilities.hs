@@ -8,6 +8,7 @@ module Utilities where
 import Data.List
 import Data.Maybe (fromMaybe)
 
+-- | List of supported alphabet characters.
 lambdaAlphaNum :: [Char]
 lambdaAlphaNum = ['a'..'z'] ++ '$':['0'..'9']
 

@@ -7,12 +7,11 @@ module FsmDef where
 
 import Data.List (sort)
 
-type State = Int
-type Final = [State]
-type Start = [State]
-type Alphabet = Char
-type Transition  = (State, String, [State])
-type SimpleTrans = (State, String, State) 
+type State = Int     -- ^ Represents the state of a FSM. 
+type Final = [State] -- ^ Set of final states.
+type Start = [State] -- ^ Set of initial states. 
+type Transition  = (State, String, [State]) -- ^ Description of a transition/delta function: (State, input String) -> [State]
+type SimpleTrans = (State, String, State)   -- ^ Alternative description for delta function: (State, input String) ->  State
 
 
 {-| The data constructor defines a FSM by the list of its transitions, list of initial

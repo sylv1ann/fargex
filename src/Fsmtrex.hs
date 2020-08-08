@@ -7,15 +7,18 @@ module Fsmtrex ( toRegex ) where
 
 import FsmDef
 import Data.Char (isAlphaNum)
+import System.IO
 
-type Regex = String
+type Regex = String -- ^ The String in the Transition = (State, String, [State]) may be also understood as a regular expression.
 
+-- | "Main" function of the Fsmtrex module. Takes the input - an FSM from the user and returns created regex.
 toRegex :: IO ()
 toRegex = do
     putStr "Enter a finite state machine: "
+    hFlush stdout
     fsmString  <- getLine
     putStrLn ("Your entered FSM: " ++ fsmString)
-    let fsm     = read fsmString::FSM
+    let fsm     = read fsmString :: FSM
         result  = createRegexFromFSMs $ reduceFSM fsm
     if isCorrectFSM fsm then
         putStrLn ("Regular expression created from given FSM is: " ++ result)

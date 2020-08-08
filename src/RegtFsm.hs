@@ -1,6 +1,6 @@
 {-|
 Module: RegtFsm
-Description: Module responsible for the conversion of given regular expression to the FSM.
+Description: Regular expression to finite state machine transformation.
 -}
 
 module RegtFsm (toFinAuto) where
@@ -8,11 +8,11 @@ module RegtFsm (toFinAuto) where
 import Utilities
 import FsmDef
 import Data.Char (isAlphaNum)
+import System.IO
 
--- | Data type synonyms for better argument understanding. 
-type Regex = String
-type Stack = String 
-type Input = String
+type Regex = String -- ^ Synonym for clarification.
+type Stack = String -- ^ Synonym for stack representation.
+type Input = String -- ^ Synonym for input string.
 
 {-| List of supported operators in a regex:
     '+': logical or,
@@ -21,10 +21,11 @@ type Input = String
 -}
 operator = "+.*"
 
--- | "Main" function of the Regtfa module. Takes the input from the user, processes it and returns created FSM.
+-- | "Main" function of the Regtfsm module. Takes the input from the user and returns created FSM.
 toFinAuto :: IO ()
 toFinAuto = do
     putStr "Enter a regular expression: "
+    hFlush stdout
     regex  <- getLine
     putStrLn ("Your entered regex: " ++ regex)
     let postfixRegex = toPostfix $ dotComplete regex
