@@ -7,8 +7,9 @@ module Utilities where
 
 import Data.List
 import Data.Maybe (fromMaybe)
-import Data.Char (isAlphaNum)
 
+lambdaAlphaNum :: [Char]
+lambdaAlphaNum = ['a'..'z'] ++ '$':['0'..'9']
 
 {-| replaceChar takes two lists of characters of equal length and a string and returns the same string with all occurrences of
     characters in the first list replaced by the characters on the same position in the second list.
@@ -47,12 +48,16 @@ dotComplete :: String -> String
 dotComplete []    = []
 dotComplete [x] = [x]
 dotComplete (x:y:xs)
-    | (isAlphaNum x && isAlphaNum y) || (elem x ")*" && elem y (['a'..'z'] ++ ['0' .. '9'] ++ "("))    = x:'.':dotComplete (y:xs)
-    | isAlphaNum x && y == '(' = x:'.':y:dotComplete xs
+    | (elem x lambdaAlphaNum && elem y lambdaAlphaNum) || (elem x ")*" && elem y ('(':lambdaAlphaNum))  = x:'.':dotComplete (y:xs)
+    | (elem x lambdaAlphaNum || x == '$') && y == '(' = x:'.':y:dotComplete xs
     | otherwise = x:dotComplete (y:xs)
 
 -- >>> dotComplete "((a.b+c)+a.(b.c)*+b)*"
 -- "((a.b+c)+a.(b.c)*+b)*"
+--
+
+-- >>> dotComplete "($a$)+($b$)"
+-- "($.a.$)+($.b.$)"
 --
 
 -- Testing examples for dotComplete function:

@@ -5,15 +5,15 @@ Description: The entrypoint of the program.
 
 module Main where
 
-import Regtfa as R
-import Fatrex as F
+import RegtFsm as R
+import Fsmtrex as F
 
 -- | Starts the appropriate function which handles desired operation based on the choice of the user given via the stdIn.
 main :: IO () 
 main = do
     putStrLn "Choose a number from the following options."
-    putStrLn "1 ) RegEx -> FA transformation."
-    putStrLn "2 ) FA    -> RegEx transformation."
+    putStrLn "1 ) RegEx -> FSM transformation."
+    putStrLn "2 ) FSM   -> RegEx transformation."
     putStr   "Choose from the above actions: "
     option <- getLine
     process option
