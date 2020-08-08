@@ -57,11 +57,33 @@ removeStates fsm [] = fsm           -- all states are already reduced -> only on
 removeStates fsm@(FSM trans initial final) (state:states) = 
     let toTrans   = getToTrans state fsm    
         fromTrans = getFromTrans state fsm  
-        addedTransitions = [(p,x ++ y, [r])|(p,x,q) <- toTrans, (q,y,r) <- fromTrans] -- creates new transition which omits the removed state
-        removedTransitions = removeTransitions (fromTrans ++ toTrans) trans           -- removes original transitions from the FSM 
+        throughStateSet  = toSimpleTrans $ foldr (\x acc -> transitionSet x acc) [] (getComplexTransitions $ fromTrans ++ toTrans) -- (state,x,state) transition(s) may exist -> we want to remove it/them and add (x)* regex to other transitions
+        addStarRegex     = [(p,x,q)|(p,x,q) <- throughStateSet, p == state, p == q]
+        addedTransitions = [(p,z,[r])|(p,x,q) <- toTrans, (q,y,r) <- fromTrans, p /= state && r /= state, let z = addedTrans x y addStarRegex] -- creates new transition which omits the removed state
+        removedTransitions = removeTransitions throughStateSet trans                  -- removes original transitions from the FSM 
         newTransitions = removedTransitions ++ addedTransitions                       -- replaces old transitions by the new ones  
         newFinal = (filter ((/= state)) final)                                        -- updating the set of final states  
     in removeStates (FSM newTransitions initial newFinal) states                      -- removing the rest of the states from the updated FSM  
+
+{- | Returns the new transition which omits the state to be deleted.
+     [SimpleTrans] being empty means there is no transition which starts
+     and ends in the state which has to be ommited.
+     On the other hand, if this list is not empty, we want to create regex
+     which may loop in the state which should be removed.
+-}
+addedTrans :: String -> String -> [SimpleTrans] -> String
+addedTrans x y []
+    | x == "$" && y == "$"  = "$"
+    | x == "$"              = y
+    | y == "$"              = x
+    | otherwise             = x ++ y
+addedTrans x y (t:ts) 
+    | x == "$" && y == "$"  = starRegex
+    | x == "$"              = starRegex ++ y
+    | y == "$"              = x ++ starRegex
+    | otherwise             = x ++ starRegex ++ y
+    where starRegex = "(" ++ (getSTransitionStr $ head (mergeTransitions (t:ts))) ++ ")*" 
+
 
 -- | The wrapper around transition reduction.
 removeTransitions :: [SimpleTrans] -> [Transition] -> [Transition]

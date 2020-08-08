@@ -115,6 +115,10 @@ getSimpleTransitions (FSM trans _ _) = toSimpleTrans trans
 getComplexTransitions :: [SimpleTrans] -> [Transition]
 getComplexTransitions simple = [(p,x,[q])|(p,x,q) <- simple]
 
+-- | Returns the edge description from a (State, String, State) transition
+getSTransitionStr :: SimpleTrans -> String
+getSTransitionStr (_,x,_) = x
+
 -- >>> getStates (FSM [(0, "a", [1]), (1, "b", [2]), (2, "b", [3]), (3, "a", [2,4])] [1] [4])
 -- [0,1,2,3,4]
 --
