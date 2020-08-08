@@ -3,7 +3,7 @@ Module: RegtFsm
 Description: Regular expression to finite state machine transformation.
 -}
 
-module RegtFsm (toFinAuto) where
+module RegtFsm (toFSM) where
 
 import Utilities
 import FsmDef
@@ -22,8 +22,8 @@ type Input = String -- ^ Synonym for input string.
 operator = "+.*"
 
 -- | "Main" function of the Regtfsm module. Takes the input from the user and returns created FSM.
-toFinAuto :: IO ()
-toFinAuto = do
+toFSM :: IO ()
+toFSM = do
     putStr "Enter a regular expression: "
     hFlush stdout
     regex  <- getLine
@@ -177,10 +177,3 @@ starRegex fa@(FSM trans initial final) =
 -- >>> starRegex (FSM [(0,'a',[1])] [0] [1])
 -- FSM [(2,'$',[0,3]),(0,'a',[1]),(1,'$',[0,3])] [2] [3]
 --
-
--- >>> toFinAuto c+d* --> testuje aj správne poradie operácií pri vyhodnocovaní regexu
--- s parametrami pri + a . 0 1: FSM [(2,'$',[4,0]),(4,'$',[2,5]),(2,'d',[3]),(3,'$',[2,5]),(0,'c',[1]),(5,'$',[3]),(1,'$',[3])] [2] [3] -- nesprávne
--- s parametrami pri + a . 1 0: FSM [(6,'$',[0,4]),(0,'c',[1]),(4,'$',[2,5]),(2,'d',[3]),(3,'$',[2,5]),(1,'$',[7]),(5,'$',[7])] [6] [7] -- správne
-
--- >>> toFinAuto c+ba
--- FSM [(6,'$',[0,2]),(0,'c',[1]),(2,'b',[3]),(3,'$',[4]),(4,'a',[5]),(1,'$',[7]),(5,'$',[7])] [6] [7] -- správne
