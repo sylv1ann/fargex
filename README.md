@@ -17,7 +17,7 @@ Result: FSM [(4,"$",[0,2]),(0,"a",[1]),(2,"b",[3]),(1,"$",[5]),(3,"$",[5])] [4] 
 ![FSM result](http://www.ms.mff.cuni.cz/~bujkov/neproc/fargex/fsm.png)
 ```
 Input FSM: FSM [(4,"$",[0,2]),(0,"a",[1]),(2,"b",[3]),(1,"$",[5]),(3,"$",[5])] [4] [5]
-Result: ($a$)+($b$)
+Result: (a)+(b)
 ```
 
 ## Documentation: 
